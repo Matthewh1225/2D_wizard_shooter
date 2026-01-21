@@ -55,8 +55,6 @@
             MenuCover = new PictureBox();
             ScoreText = new Label();
             MenuTitleText = new Label();
-            GameBackgroundMusic = new AxWMPLib.AxWindowsMediaPlayer();
-            SpellSwitchClick = new AxWMPLib.AxWindowsMediaPlayer();
             NoobDiffucltyButton = new Button();
             ConjurerDiffucltyButton = new Button();
             DifficultyText = new Label();
@@ -68,8 +66,6 @@
             menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)bindingSource1).BeginInit();
             ((System.ComponentModel.ISupportInitialize)MenuCover).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)GameBackgroundMusic).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)SpellSwitchClick).BeginInit();
             SuspendLayout();
             // 
             // Player
@@ -316,26 +312,6 @@
             MenuTitleText.TabIndex = 12;
             MenuTitleText.Text = "Spell Strike";
             // 
-            // GameBackgroundMusic
-            // 
-            GameBackgroundMusic.Enabled = true;
-            GameBackgroundMusic.Location = new Point(1215, 38);
-            GameBackgroundMusic.Name = "GameBackgroundMusic";
-            GameBackgroundMusic.OcxState = (AxHost.State)resources.GetObject("GameBackgroundMusic.OcxState");
-            GameBackgroundMusic.Size = new Size(37, 35);
-            GameBackgroundMusic.TabIndex = 13;
-            // 
-            // SpellSwitchClick
-            // 
-            SpellSwitchClick.Enabled = true;
-            SpellSwitchClick.Location = new Point(1215, 79);
-            SpellSwitchClick.Name = "SpellSwitchClick";
-            SpellSwitchClick.OcxState = (AxHost.State)resources.GetObject("SpellSwitchClick.OcxState");
-            SpellSwitchClick.Size = new Size(36, 30);
-            SpellSwitchClick.TabIndex = 14;
-            SpellSwitchClick.Tag = "";
-            SpellSwitchClick.Visible = false;
-            // 
             // NoobDiffucltyButton
             // 
             NoobDiffucltyButton.BackColor = Color.Green;
@@ -427,8 +403,6 @@
             Controls.Add(Moon);
             Controls.Add(menuStrip1);
             Controls.Add(ScoreText);
-            Controls.Add(GameBackgroundMusic);
-            Controls.Add(SpellSwitchClick);
             Controls.Add(ManaBar);
             Controls.Add(ManabarHack);
             DoubleBuffered = true;
@@ -447,8 +421,6 @@
             menuStrip1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)bindingSource1).EndInit();
             ((System.ComponentModel.ISupportInitialize)MenuCover).EndInit();
-            ((System.ComponentModel.ISupportInitialize)GameBackgroundMusic).EndInit();
-            ((System.ComponentModel.ISupportInitialize)SpellSwitchClick).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -479,8 +451,6 @@
         private ToolStripMenuItem sepllsToolStripMenuItem;
         private Label MenuTitleText;
         private ToolStripMenuItem ShieldToolStripMenuItem;
-        private AxWMPLib.AxWindowsMediaPlayer GameBackgroundMusic;
-        private AxWMPLib.AxWindowsMediaPlayer SpellSwitchClick;
         private Button NoobDiffucltyButton;
         private Button ConjurerDiffucltyButton;
         private Label DifficultyText;

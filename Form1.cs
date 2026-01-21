@@ -1,8 +1,11 @@
 
 using System.Diagnostics;
-using System.Media;
 using System.Runtime.InteropServices.Marshalling;
+using System.Threading;
+using System.Threading.Tasks;
 using _2D_shooter.Properties;
+using NAudio.Wave;
+using NAudio.Wave.SampleProviders;
 using Timer = System.Windows.Forms.Timer;
 
 namespace _2D_shooter
@@ -30,10 +33,11 @@ namespace _2D_shooter
         bool DrawPlayer = true;
         bool onGround = true;
         bool CanFire = true;
+        bool gameStarted = false;
+        bool menuCleaned = false;
 
-        //resource pths for sounds
-        string ShootSound = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "ShootSound.wav");
-        string PathSwitch = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "switch25.wav");
+        IDisposable? backgroundMusicHandle;
+
         string PathMusic = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "Game Over.wav");
         string facing = "left";
         
@@ -57,11 +61,8 @@ namespace _2D_shooter
             InitializeComponent();
 
             Round = 1;
-     
-            GameBackgroundMusic.URL = PathMusic;
-            GameBackgroundMusic.settings.volume = 3;
-            GameBackgroundMusic.settings.setMode("loop", true);
-            GameBackgroundMusic.Hide();
+
+            backgroundMusicHandle = AudioPlaybackEngine.Instance.PlayLoopingFile(PathMusic);
 
             Player.Image = Properties.Resources.FemalewIZARD_LEFT;
             DrawPlayer = false;
@@ -81,7 +82,7 @@ namespace _2D_shooter
             float ratio = (16f / (float)GameClock.Interval);
             CanFire = true;
             //reveal/hides the game screen menue on button press/dispose
-            if (!playTextBox.IsDisposed)
+            if (!gameStarted)
             {
                 CanFire = false;
 
@@ -92,14 +93,15 @@ namespace _2D_shooter
                 EnemyHeaLthBAR.Hide();
             }
             else
-            {//button sound
-                SpellSwitchClick.URL = PathSwitch;
-
-                DifficultyText.Dispose();
-                NoobDiffucltyButton.Dispose();
-                ConjurerDiffucltyButton.Dispose();
-                GrandSorcererDifficultyButton.Dispose();
-
+            {
+                if (!menuCleaned)
+                {
+                    DifficultyText.Dispose();
+                    NoobDiffucltyButton.Dispose();
+                    ConjurerDiffucltyButton.Dispose();
+                    GrandSorcererDifficultyButton.Dispose();
+                    menuCleaned = true;
+                }
                 PlayerHealthBar.Show();
                 ManabarHack.Show();
 
@@ -110,7 +112,8 @@ namespace _2D_shooter
             //ends the game if player dies
             if (PlayerHealth <= 0)
             {
-                GameBackgroundMusic.Dispose();
+                backgroundMusicHandle?.Dispose();
+                backgroundMusicHandle = null;
                 CanFire = false;
                 DrawPlayer = false;
                 GmeOverTEXT.BringToFront();
@@ -204,9 +207,7 @@ namespace _2D_shooter
                     (string?)Spell.SpellPicture.Tag == "Spell" &&
                     enemy.Bounds.IntersectsWith(Spell.SpellPicture.Bounds))
                 {
-                    using var hit = new SoundPlayer(
-                    new MemoryStream(Properties.Resources.impactBell_heavy_004));
-                    hit.Play();
+                    AudioEffects.PlayBytes(Properties.Resources.impactBell_heavy_004);
                     Spell.DestroySpell();
 
                     enemy.EnemyHealth -= Spell.SpellDamage;
@@ -266,8 +267,7 @@ namespace _2D_shooter
                 }
                 if (Player.Bounds.IntersectsWith(Spell.SpellPicture.Bounds) && PlayerHealth > 0)
                 {
-                    var hit = new SoundPlayer(new System.IO.MemoryStream(Properties.Resources.impactBell_heavy_004));
-                    hit.Play();
+                    AudioEffects.PlayBytes(Properties.Resources.impactBell_heavy_004);
                     Spell.offScreen = true;
                     Spell.SpellPicture.Dispose();
                     if (PlayerHealth - Spell.SpellDamage < 0)
@@ -363,8 +363,7 @@ namespace _2D_shooter
                     return;
                 }
 
-            var ShootSound = new SoundPlayer(new System.IO.MemoryStream(Properties.Resources.ShootSound));
-            ShootSound.Play();
+            AudioEffects.PlayBytes(Properties.Resources.ShootSound);
 
 
 
@@ -525,8 +524,7 @@ namespace _2D_shooter
         {
            
             currentSpell = SpellType.Pink;
-            var Switch = new SoundPlayer(new System.IO.MemoryStream(Properties.Resources.switch25));
-            Switch.Play();
+            AudioEffects.PlayBytes(Properties.Resources.switch25);
 
 
             HealSpellToolStripMenuItem.BackColor = Color.LimeGreen;
@@ -539,8 +537,7 @@ namespace _2D_shooter
         {
             currentSpell = SpellType.Tornado;
 
-            var Switch = new SoundPlayer(new System.IO.MemoryStream(Properties.Resources.switch25));
-            Switch.Play();
+            AudioEffects.PlayBytes(Properties.Resources.switch25);
 
             HealSpellToolStripMenuItem.BackColor = Color.LimeGreen;
             TornadoSpellToolStripMenuItem.BackColor = Color.White;
@@ -551,8 +548,7 @@ namespace _2D_shooter
         private void LightningSpellEvent(object sender, EventArgs e)
         {
             currentSpell = SpellType.Lightning;
-            var Switch = new SoundPlayer(new System.IO.MemoryStream(Properties.Resources.switch25));
-            Switch.Play();
+            AudioEffects.PlayBytes(Properties.Resources.switch25);
 
             HealSpellToolStripMenuItem.BackColor = Color.LimeGreen;
             LightningSpellToolStripMenuItem.BackColor = Color.WhiteSmoke;
@@ -563,8 +559,7 @@ namespace _2D_shooter
         private void ShieldMenuClickEvent(object sender, EventArgs e)
         {
             currentSpell = SpellType.Shield;
-            var Switch = new SoundPlayer(new System.IO.MemoryStream(Properties.Resources.switch25));
-            Switch.Play();
+            AudioEffects.PlayBytes(Properties.Resources.switch25);
 
             HealSpellToolStripMenuItem.BackColor = Color.LimeGreen;
             ShieldToolStripMenuItem.BackColor = Color.WhiteSmoke;
@@ -576,8 +571,7 @@ namespace _2D_shooter
         {
             currentSpell = SpellType.Heal;
 
-            var Switch = new SoundPlayer(new System.IO.MemoryStream(Properties.Resources.switch25));
-            Switch.Play();
+            AudioEffects.PlayBytes(Properties.Resources.switch25);
 
             HealSpellToolStripMenuItem.BackColor = Color.WhiteSmoke;
             ShieldToolStripMenuItem.BackColor = Color.Sienna;
@@ -644,11 +638,11 @@ namespace _2D_shooter
         // play/Exit ButtonLogic
         private void ButtonClickEvent(object sender, EventArgs e)
         {
-            var Switch = new SoundPlayer(new System.IO.MemoryStream(Properties.Resources.switch25));
-            Switch.Play();
+            AudioEffects.PlayBytes(Properties.Resources.switch25);
 
             if (playTextBox.Text.ToLower() == "play")
             {
+                gameStarted = true;
                 MenuTitleText.Dispose();
                 MenuCover.Dispose();
                 playTextBox.Clear();
@@ -671,7 +665,7 @@ namespace _2D_shooter
             NoobDiffucltyButton.BackColor = Color.White;
             GrandSorcererDifficultyButton.BackColor = Color.Firebrick;
 
-            SpellSwitchClick.URL = PathSwitch;
+            AudioEffects.PlayBytes(Properties.Resources.switch25);
         }
         private void ConjurerDifficultyEvent(object sender, EventArgs e)
         {
@@ -681,7 +675,7 @@ namespace _2D_shooter
             ConjurerDiffucltyButton.BackColor = Color.White;
             GrandSorcererDifficultyButton.BackColor = Color.Firebrick;
             NoobDiffucltyButton.BackColor = Color.Green;
-            SpellSwitchClick.URL = PathSwitch;
+            AudioEffects.PlayBytes(Properties.Resources.switch25);
         }
         private void GrandSorcererEvent(object sender, EventArgs e)
         {
@@ -691,7 +685,7 @@ namespace _2D_shooter
             ConjurerDiffucltyButton.BackColor = Color.DarkOrange;
             GrandSorcererDifficultyButton.BackColor = Color.White;
             NoobDiffucltyButton.BackColor = Color.Green;
-            SpellSwitchClick.URL = PathSwitch;
+            AudioEffects.PlayBytes(Properties.Resources.switch25);
         }
 
     }
@@ -907,6 +901,174 @@ namespace _2D_shooter
             Size = attackSize;
             resetTimer.Start();
         }
+    }
+
+    /// <summary>
+    /// Single audio engine to avoid device contention and cutouts.
+    /// </summary>
+    sealed class AudioPlaybackEngine : IDisposable
+    {
+        static readonly Lazy<AudioPlaybackEngine> lazy =
+            new(() => new AudioPlaybackEngine());
+        public static AudioPlaybackEngine Instance => lazy.Value;
+
+        readonly IWavePlayer outputDevice;
+        readonly MixingSampleProvider mixer;
+        readonly WaveFormat format;
+        bool disposed;
+
+        AudioPlaybackEngine(int sampleRate = 44100, int channelCount = 2)
+        {
+            format = WaveFormat.CreateIeeeFloatWaveFormat(sampleRate, channelCount);
+            outputDevice = new WaveOutEvent();
+            mixer = new MixingSampleProvider(format) { ReadFully = true };
+            outputDevice.Init(mixer);
+            outputDevice.Play();
+        }
+
+        public IDisposable PlayLoopingFile(string path)
+        {
+            var reader = new AudioFileReader(path);
+            var loop = new LoopingWaveProvider(reader);
+            AddMixerInput(loop, loop, reader);
+            return new LoopHandle(loop);
+        }
+
+        public void PlayBytes(byte[] data)
+        {
+            var ms = new MemoryStream(data);
+            var reader = new WaveFileReader(ms);
+            AddMixerInput(reader.ToSampleProvider(), reader, ms);
+        }
+
+        public void PlayFile(string path)
+        {
+            var reader = new AudioFileReader(path);
+            AddMixerInput(reader.ToSampleProvider(), reader);
+        }
+
+        void AddMixerInput(ISampleProvider input, params IDisposable[] disposables)
+        {
+            var converted = ConvertToMixerFormat(input);
+            mixer.AddMixerInput(new AutoDisposeSampleProvider(converted, disposables));
+        }
+
+        ISampleProvider ConvertToMixerFormat(ISampleProvider input)
+        {
+            ISampleProvider provider = input;
+            if (provider.WaveFormat.SampleRate != format.SampleRate)
+            {
+                provider = new WdlResamplingSampleProvider(provider, format.SampleRate);
+            }
+
+            if (provider.WaveFormat.Channels == 1 && format.Channels == 2)
+            {
+                provider = new MonoToStereoSampleProvider(provider);
+            }
+            else if (provider.WaveFormat.Channels == 2 && format.Channels == 1)
+            {
+                provider = new StereoToMonoSampleProvider(provider);
+            }
+
+            return provider;
+        }
+
+        public void Dispose()
+        {
+            if (disposed) return;
+            disposed = true;
+            outputDevice.Dispose();
+        }
+    }
+
+    sealed class AutoDisposeSampleProvider : ISampleProvider
+    {
+        readonly ISampleProvider source;
+        readonly IDisposable[] toDispose;
+
+        public AutoDisposeSampleProvider(ISampleProvider source, params IDisposable[] toDispose)
+        {
+            this.source = source;
+            this.toDispose = toDispose;
+            WaveFormat = source.WaveFormat;
+        }
+
+        public WaveFormat WaveFormat { get; }
+
+        public int Read(float[] buffer, int offset, int count)
+        {
+            int read = source.Read(buffer, offset, count);
+            if (read == 0)
+            {
+                foreach (var d in toDispose)
+                {
+                    d.Dispose();
+                }
+            }
+            return read;
+        }
+    }
+
+    sealed class LoopingWaveProvider : ISampleProvider, IDisposable
+    {
+        readonly WaveStream stream;
+        readonly ISampleProvider provider;
+        bool stopRequested;
+
+        public LoopingWaveProvider(WaveStream stream)
+        {
+            this.stream = stream;
+            provider = stream.ToSampleProvider();
+            WaveFormat = provider.WaveFormat;
+        }
+
+        public WaveFormat WaveFormat { get; }
+
+        public int Read(float[] buffer, int offset, int count)
+        {
+            if (stopRequested)
+            {
+                return 0;
+            }
+
+            int total = 0;
+            while (total < count)
+            {
+                int read = provider.Read(buffer, offset + total, count - total);
+                if (read == 0)
+                {
+                    stream.Position = 0;
+                    continue;
+                }
+                total += read;
+            }
+            return total;
+        }
+
+        public void Stop() => stopRequested = true;
+
+        public void Dispose()
+        {
+            stopRequested = true;
+            stream.Dispose();
+        }
+    }
+
+    sealed class LoopHandle : IDisposable
+    {
+        readonly LoopingWaveProvider loop;
+        public LoopHandle(LoopingWaveProvider loop) => this.loop = loop;
+        public void Dispose() => loop.Stop();
+    }
+
+    static class AudioEffects
+    {
+        // fire-and-forget playback through the shared engine
+        public static void PlayBytes(byte[] data) =>
+            AudioPlaybackEngine.Instance.PlayBytes(data);
+
+        public static void PlayFile(string path) =>
+            AudioPlaybackEngine.Instance.PlayFile(path);
     }
 }
 
